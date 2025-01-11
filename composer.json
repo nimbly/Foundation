@@ -1,0 +1,46 @@
+{
+    "name": "nimbly/dais",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "nimbly/limber": "^3.0",
+        "nimbly/capsule": "^3.0",
+        "nimbly/carton": "^2.0",
+        "nimbly/caboodle": "^1.0",
+        "nimbly/proof": "^1.1",
+        "vlucas/phpdotenv": "^5.6",
+        "nimbly/announce": "^2.0",
+		"nimbly/syndicate": "dev-master",
+        "monolog/monolog": "^3.8",
+        "league/openapi-psr7-validator": "^0.22.0",
+        "react/http": "^1.11",
+        "peppeocchi/php-cron-scheduler": "^4.0",
+        "symfony/cache": "^7.2",
+        "predis/predis": "^2.3",
+        "psy/psysh": "^0.12.7"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Brent Scheffler",
+            "email": "brent@brentscheffler.com"
+        }
+    ],
+    "require-dev": {
+        "symfony/console": "^7.2",
+        "symfony/var-dumper": "^7.2",
+        "phpunit/phpunit": "^10.0",
+		"vimeo/psalm": "^5.0",
+        "hackzilla/password-generator": "^1.7"
+    },
+	"autoload": {
+		"psr-4": {
+			"Nimbly\\Foundation\\": "src/"
+		}
+	},
+	"config": {
+		"platform": {
+			"php": "8.2"
+		}
+	}
+}
