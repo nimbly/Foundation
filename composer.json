@@ -1,6 +1,6 @@
 {
     "name": "nimbly/foundation",
-    "type": "project",
+    "type": "library",
     "require": {
         "nimbly/limber": "^3.0",
         "nimbly/capsule": "^3.0",
