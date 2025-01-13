@@ -6,12 +6,13 @@ use IronMQ\IronMQ;
 use Predis\Client as RedisClient;
 use Aws\Sns\SnsClient;
 use Aws\Sqs\SqsClient;
+use DomainException;
 use Pheanstalk\Pheanstalk;
 use Nimbly\Carton\Container;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
-use Nimbly\Syndicate\RabbitMQ;
 use PhpMqtt\Client\MqttClient;
+use Nimbly\Syndicate\Queue\RabbitMQ;
 use Nimbly\Syndicate\Queue\Sqs;
 use Nimbly\Syndicate\PubSub\Sns;
 use Nimbly\Syndicate\Queue\Iron;
@@ -42,12 +43,23 @@ class ApplicationProvider implements ServiceProviderInterface
 			Application::class,
 			function(Container $container): Application {
 
+				if( $container->has(RouterInterface::class) === false ){
+					throw new DomainException(
+						"RouterInterface instance is not in the container. " .
+						"In order to route messages to your handlers, you must " .
+						"provide an implementation of the Nimbly\Syndicate\RouterInterface. " .
+						"Please reference documentation for more information."
+					);
+				}
+
 				$consumer = $container->has(ConsumerInterface::class) ?
 					$container->get(ConsumerInterface::class) :
 					self::resolveAdapter(\config("consumer.adapter"), $container);
 
 				if( $consumer instanceof ConsumerInterface === false ){
-					throw new UnexpectedValueException("Unsupported consumer adapter: " . $consumer::class);
+					throw new UnexpectedValueException(
+						\sprintf("Adapter \"%s\" is not a consumer.", $consumer::class)
+					);
 				}
 
 				return new Application(
@@ -147,12 +159,15 @@ class ApplicationProvider implements ServiceProviderInterface
 					)
 				)),
 
-			"redis_queue" => $container->has(RedisQueue::class) ?
+			"redis" => $container->has(RedisQueue::class) ?
 				$container->get(RedisQueue::class) :
 				new RedisQueue(
 					new RedisClient(
-						\config("consumer.host") . ":" . \config("consumer.port") ?? "6379",
-						\config("consumer.redis")
+						\array_merge([
+							"host" => \config("consumer.host"),
+							"port" => \config("consumer.port") ?? "6379",
+						], \config("consumer.redis.parameters") ?? []),
+						\config("consumer.redis.options")
 					)
 				),
 
@@ -186,8 +201,8 @@ class ApplicationProvider implements ServiceProviderInterface
 	/**
 	 * Build the DeadletterPublisher instance.
 	 *
-	 * @param string $adapter
-	 * @param string $topic
+	 * @param string|null $adapter
+	 * @param string|null $topic
 	 * @param Container $container
 	 * @return DeadletterPublisher|null
 	 */
@@ -204,7 +219,9 @@ class ApplicationProvider implements ServiceProviderInterface
 		$publisher = self::resolveAdapter($adapter, $container);
 
 		if( $publisher instanceof PublisherInterface === false ){
-			throw new UnexpectedValueException("Adapter is not a publisher: " . $publisher::class);
+			throw new UnexpectedValueException(
+				\sprintf("Adapter \"%s\" is not a publisher.", $publisher::class)
+			);
 		}
 
 		return new DeadletterPublisher($publisher, $topic);

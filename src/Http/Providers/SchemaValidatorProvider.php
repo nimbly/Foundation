@@ -3,6 +3,7 @@
 namespace Nimbly\Foundation\Http\Providers;
 
 use Nimbly\Carton\Container;
+use Psr\Cache\CacheItemPoolInterface;
 use Nimbly\Carton\ServiceProviderInterface;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use League\OpenAPIValidation\PSR7\ResponseValidator;
@@ -20,20 +21,26 @@ class SchemaValidatorProvider implements ServiceProviderInterface
 	{
 		$validatorBuilder = new ValidatorBuilder;
 
-		// $validatorBuilder->setCache(
-		// 	$container->get(CacheInterface::class),
-		// 	86400
-		// );
+		$file = \config("http.schema.file");
 
-		// $validatorBuilder->overrideCacheKey(
-		// 	\sprintf(
-		// 		"%s-%s-openapi_schema",
-		// 		\config("app.name"),
-		// 		\config("app.version")
-		// 	)
-		// );
+		if( \str_ends_with(\strtolower($file), ".yml") ||
+			\str_ends_with(\strtolower($file), ".yaml") ){
+			$validatorBuilder->fromYamlFile($file);
+		}
+		else {
+			$validatorBuilder->fromJsonFile($file);
+		}
 
-		$validatorBuilder->fromJsonFile(\config("http.schema"));
+		if( \config("http.schema.cache.enabled") ){
+			$validatorBuilder->setCache(
+				$container->get(CacheItemPoolInterface::class),
+				\config("http.schema.cache.ttl") ?? 86400
+			);
+
+			if( \config("http.schema.cache.key") ){
+				$validatorBuilder->overrideCacheKey(\config("http.schema.cache.key"));
+			}
+		}
 
 		$container->set(
 			ServerRequestValidator::class,

@@ -8,7 +8,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use League\OpenAPIValidation\PSR7\Exception\NoPath;
-use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Nimbly\Limber\Exceptions\NotFoundHttpException;
 use League\OpenAPIValidation\PSR7\ResponseValidator;
 use Nimbly\Limber\Exceptions\BadRequestHttpException;
@@ -23,25 +22,24 @@ use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidSecurity;
 
 /**
  * This middleware validates each incoming server request and outgoing response against your
- * OpenAPI contract.
+ * OpenAPI schema.
  *
  * If the incoming request fails validation, a 4xx level HTTP exception will be thrown.
  *
  * If the outgoing response fails validation, a 500 Internal Server Error exception
  * will be thrown.
  */
-class OpenApiValidatorMiddleware implements MiddlewareInterface
+class SchemaValidatorMiddleware implements MiddlewareInterface
 {
-	protected ServerRequestValidator $serverRequestValidator;
-	protected ResponseValidator $responseValidator;
-
 	/**
-	 * @param ValidatorBuilder $validatorBuilder
+	 * @param ServerRequestValidator $serverRequestValidator
+	 * @param ResponseValidator $responseValidator
 	 */
-	public function __construct(ValidatorBuilder $validatorBuilder)
+	public function __construct(
+		protected ServerRequestValidator $serverRequestValidator,
+		protected ResponseValidator $responseValidator
+	)
 	{
-		$this->serverRequestValidator = $validatorBuilder->getServerRequestValidator();
-		$this->responseValidator = $validatorBuilder->getResponseValidator();
 	}
 
 	/**
@@ -49,6 +47,10 @@ class OpenApiValidatorMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
+		if( \config("http.schema.enabled") === false ){
+			return $handler->handle($request);
+		}
+
 		try {
 
 			$operationAddress = $this->serverRequestValidator->validate($request);

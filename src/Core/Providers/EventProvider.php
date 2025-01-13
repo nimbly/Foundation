@@ -19,7 +19,7 @@ class EventProvider implements ServiceProviderInterface
 	{
 		$container->singleton(
 			EventDispatcherInterface::class,
-			function(Container $container): Dispatcher {
+			function(Container $container): EventDispatcherInterface {
 				return new Dispatcher(
 					\config("event.subscribers") ?? [],
 					$container

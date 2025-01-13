@@ -72,6 +72,10 @@ class Setup extends Command
 				}
 
 				$CONFIG["jwt"]["issuer"] = $style->ask("Who is the issuer for JWTs?", \config("jwt.issuer") ?: \config("app.name"));
+
+				if( $CONFIG["jwt"]["issuer"] === \config("app.name") ){
+					$CONFIG["jwt"]["issuer"] = null;
+				}
 			}
 		}
 

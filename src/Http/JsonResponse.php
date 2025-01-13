@@ -15,8 +15,8 @@ class JsonResponse extends Response
 {
 	/**
 	 * @param int|ResponseStatus $status_code HTTP response status code.
-	 * @param array<array-key,mixed>|JsonSerializable $body Response body as an associative array or an object implementing JsonSerializable.
-	 * @param array<array-key,string> $headers Additional headers to include with response.
+	 * @param array<string,mixed>|JsonSerializable $body Response body as an associative array or an object implementing JsonSerializable.
+	 * @param array<string,string> $headers Additional headers to include with response.
 	 */
 	public function __construct(
 		int|ResponseStatus $status_code = ResponseStatus::OK,

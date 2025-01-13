@@ -1,23 +1,30 @@
 {
-    "name": "nimbly/dais",
+    "name": "nimbly/foundation",
     "type": "project",
     "require": {
-        "php": ">=8.2",
         "nimbly/limber": "^3.0",
         "nimbly/capsule": "^3.0",
-        "nimbly/carton": "^2.0",
+        "nimbly/carton": "^2.1",
         "nimbly/caboodle": "^1.0",
         "nimbly/proof": "^1.1",
-        "vlucas/phpdotenv": "^5.6",
         "nimbly/announce": "^2.0",
 		"nimbly/syndicate": "dev-master",
+        "vlucas/phpdotenv": "^5.6",
+        "psy/psysh": "^0.12.7",
         "monolog/monolog": "^3.8",
-        "league/openapi-psr7-validator": "^0.22.0",
-        "react/http": "^1.11",
-        "peppeocchi/php-cron-scheduler": "^4.0",
-        "symfony/cache": "^7.2",
         "predis/predis": "^2.3",
-        "psy/psysh": "^0.12.7"
+        "symfony/cache": "^7.2",
+        "react/http": "^1.11",
+        "league/openapi-psr7-validator": "^0.22.0",
+        "peppeocchi/php-cron-scheduler": "^4.0",
+        "league/flysystem": "^3.29",
+        "league/flysystem-read-only": "^3.28",
+        "league/flysystem-path-prefixing": "^3.28",
+        "league/flysystem-sftp-v3": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
+		"league/flysystem-memory": "^3.0",
+        "league/flysystem-azure-blob-storage": "^3.0",
+        "league/flysystem-ftp": "^3.0"
     },
     "license": "MIT",
     "authors": [
@@ -31,6 +38,7 @@
         "symfony/var-dumper": "^7.2",
         "phpunit/phpunit": "^10.0",
 		"vimeo/psalm": "^5.0",
+        "fakerphp/faker": "^1.24",
         "hackzilla/password-generator": "^1.7"
     },
 	"autoload": {

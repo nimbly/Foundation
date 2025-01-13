@@ -8,7 +8,7 @@ use Nimbly\Proof\Proof;
 use Nimbly\Proof\Token;
 use Ramsey\Uuid\Uuid;
 
-class JwtGenerator
+class JwtService
 {
 	public function __construct(
 		protected Proof $proof,
@@ -19,6 +19,8 @@ class JwtGenerator
 
 	/**
 	 * Generate a JWT.
+	 *
+	 * This method automatically creates a `jti` (JWT ID in UUID format), `sub` (subject), `iss` (issuer), and `exp` (expiration) claim. Additional claims may be added in the `claims` parameter.
 	 *
 	 * @param string $subject The subject of the JWT (eg, user ID, account ID, etc.)
 	 * @param DateInterval $ttl The TTL of the JWT, used to compute the expiration timestamp.
@@ -52,8 +54,8 @@ class JwtGenerator
 			"jti" => Uuid::uuid4()->toString(),
 			"iss" => $this->issuer,
 			"sub" => $subject,
-			...$claims,
 			"exp" => (int) (new DateTime)->add($ttl)->format("U"),
+			...$claims,
 		]);
 	}
 

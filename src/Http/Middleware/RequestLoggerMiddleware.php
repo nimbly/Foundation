@@ -35,15 +35,18 @@ class RequestLoggerMiddleware implements MiddlewareInterface
 			$endpoint
 		);
 
-		// Log the request message
-		Log::debug($message, [
+		$request_context = [
 			"method" => $request->getMethod(),
 			"uri" => (string) $request->getUri(),
-			"ip" => $request->getServerParams()["REMOTE_ADDR"] ?? "",
-			"host" => $request->getUri()->getHost(),
+			"ip" => $request->getHeaderLine("X_FORWARDED_FOR") ?: $request->getServerParams()["REMOTE_ADDR"] ?? "",
 			"headers" => $request->getHeaders(),
-			"query" => $request->getQueryParams(),
-		]);
+		];
+
+		if( \config("app.debug") ){
+			$request_context["body"] = (array) $request->getParsedBody();
+		}
+
+		Log::debug($message, $request_context);
 
 		$response = $handler->handle($request);
 
@@ -56,7 +59,17 @@ class RequestLoggerMiddleware implements MiddlewareInterface
 			$endpoint
 		);
 
-		Log::debug($message, ["headers" => $response->getHeaders()]);
+		$response_context = [
+			"headers" => $response->getHeaders()
+		];
+
+		if( \config("app.debug") ){
+			$body = clone $response->getBody();
+			$response_context["body"] = $response->getBody()->getContents();
+			$response = $response->withBody($body);
+		}
+
+		Log::debug($message, $response_context);
 
 		return $response;
 	}

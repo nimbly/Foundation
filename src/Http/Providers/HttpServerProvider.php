@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Nimbly\Carton\ServiceProviderInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Nimbly\Capsule\Factory\ServerRequestFactory;
+use Nimbly\Foundation\Core\Log;
 
 /**
  * Provides the React/Http server instance necessary to run as a standalone
@@ -62,7 +63,9 @@ class HttpServerProvider implements ServiceProviderInterface
 			$loop->addSignal(
 				$signal,
 				function(int $signal) use ($loop): void {
+					Log::info("Received interrupt signal.");
 					$loop->stop();
+					Log::info("HTTP server stopped.");
 				}
 			);
 		}

@@ -26,7 +26,9 @@ class JwtProvider implements ServiceProviderInterface
 			Proof::class,
 			function(): Proof {
 
-				$signer = match(\config("jwt.signer")) {
+				$adapter = \config("jwt.signer");
+
+				$signer = match($adapter) {
 					"hmac" => new HmacSigner(
 						\config("jwt.algorithm"),
 						\base64_decode(\getenv("JWT_HMAC_SECRET"))
@@ -38,7 +40,9 @@ class JwtProvider implements ServiceProviderInterface
 						\getenv("JWT_PRIVATE_KEY") ? \openssl_get_privatekey(\base64_decode(\getenv("JWT_PRIVATE_KEY"))) : null,
 					),
 
-					default => throw new UnexpectedValueException("Unsupported signer")
+					default => throw new UnexpectedValueException(
+						\sprintf("\"%s\" is not a valid JWT signer option.", $adapter)
+					)
 				};
 
 				return new Proof(

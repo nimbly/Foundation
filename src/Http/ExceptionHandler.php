@@ -14,7 +14,17 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 
 /**
- * The default exception handler that will return a well formatted JSON error response.
+ * The default exception handler that will return a well formatted JSON error response
+ * for any uncaught exceptions.
+ *
+ * Exceptions that extend `Nimbly\Limber\Exceptions\HttpException` will automatically set
+ * the correct HTTP response code.
+ *
+ * Exceptions that do not extend `Nimbly\Limber\Exceptions\HttpException` will return a
+ * `500 Interal Server Error` response.
+ *
+ * If debug mode is enabled (@see config/app.php), additional information is returned in
+ * this response including a full stack trace.
  */
 class ExceptionHandler implements ExceptionHandlerInterface
 {

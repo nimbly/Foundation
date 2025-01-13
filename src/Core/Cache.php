@@ -2,17 +2,9 @@
 
 namespace Nimbly\Foundation\Core;
 
-use DateInterval;
+use Symfony\Contracts\Cache\CacheInterface;
 use UnexpectedValueException;
-use Psr\SimpleCache\CacheInterface;
 
-/**
- * @method static bool has(string $key) Test whether cache contains an item by its key.
- * @method static mixed get(string $key) Get a cache item by its key.
- * @method static void set(string $key, mixed $data, int|DateInterval|null $ttl = null) Set a cache item with a TTL.
- * @method static void delete(string $key) Delete a cache item by its key.
- * @method static void clear() Clear all contents of the cache.
- */
 class Cache
 {
 	private static ?CacheInterface $cache = null;
@@ -31,45 +23,35 @@ class Cache
 	}
 
 	/**
-	 * Call instance method on cache instance.
-	 *
-	 * @param string $method
-	 * @param array<mixed> $params
-	 * @throws NotFoundException
-	 * @return mixed
-	 */
-	public static function __callStatic(string $method, array $params): mixed
-	{
-		if( self::$cache === null ){
-			throw new UnexpectedValueException("Cache class has not been initialized. Please call Cache::init() method first.");
-		}
-
-		return \call_user_func_array(
-			[self::$cache, $method],
-			$params
-		);
-	}
-
-	/**
 	 * Get or create a cache entry.
 	 *
 	 * @param string $key
-	 * @param callable $builder
-	 * @param DateInterval|null $ttl
+	 * @param callable $callback
+	 * @param float|null $beta
+	 * @param array|null $metadata
 	 * @return mixed
 	 */
-	public static function entry(string $key, callable $builder, ?DateInterval $ttl = null): mixed
+	public static function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
 	{
-		$data = self::get($key);
-
-		if( !empty($data) ){
-			return $data;
+		if( empty(self::$cache) ){
+			throw new UnexpectedValueException("Cache has not been initialized. Please call Cache::init() first.");
 		}
 
-		$data = \call_user_func($builder, $key);
+		return self::$cache->get($key, $callback, $beta, $metadata);
+	}
 
-		self::set($key, $data, $ttl);
+	/**
+	 * Delete a key from the cache.
+	 *
+	 * @param string $key
+	 * @return void
+	 */
+	public static function delete(string $key): bool
+	{
+		if( empty(self::$cache) ){
+			throw new UnexpectedValueException("Cache has not been initialized. Please call Cache::init() first.");
+		}
 
-		return $data;
+		return self::$cache->delete($key);
 	}
 }

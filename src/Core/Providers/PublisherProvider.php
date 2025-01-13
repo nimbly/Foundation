@@ -4,12 +4,13 @@ namespace Nimbly\Foundation\Core\Providers;
 
 use Nimbly\Carton\Container;
 use UnexpectedValueException;
+use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Carton\ServiceProviderInterface;
 use Nimbly\Foundation\Consumer\Providers\ApplicationProvider;
 
 /**
- * Provides a PublisherInterface instance to publish events and messages to a queue or to a
- * PubSub topic.
+ * Provides a `Nimbly\Syndicate\PublisherInterface` instance to publish
+ * events and messages to a queue or to a PubSub topic.
  *
  * @see `config/publisher.php` for configuration options.
  */
