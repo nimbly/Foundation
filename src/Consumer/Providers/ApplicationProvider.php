@@ -6,7 +6,6 @@ use IronMQ\IronMQ;
 use Predis\Client as RedisClient;
 use Aws\Sns\SnsClient;
 use Aws\Sqs\SqsClient;
-use DomainException;
 use Pheanstalk\Pheanstalk;
 use Nimbly\Carton\Container;
 use Psr\Log\LoggerInterface;
@@ -34,6 +33,7 @@ use Nimbly\Syndicate\Queue\Redis as RedisQueue;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use MicrosoftAzure\Storage\Queue\QueueRestProxy;
 use Nimbly\Syndicate\PubSub\Redis as RedisPubsub;
+use Nimbly\Syndicate\Router;
 
 class ApplicationProvider implements ServiceProviderInterface
 {
@@ -42,15 +42,6 @@ class ApplicationProvider implements ServiceProviderInterface
 		$container->singleton(
 			Application::class,
 			function(Container $container): Application {
-
-				if( $container->has(RouterInterface::class) === false ){
-					throw new DomainException(
-						"RouterInterface instance is not in the container. " .
-						"In order to route messages to your handlers, you must " .
-						"provide an implementation of the Nimbly\Syndicate\RouterInterface. " .
-						"Please reference documentation for more information."
-					);
-				}
 
 				$consumer = $container->has(ConsumerInterface::class) ?
 					$container->get(ConsumerInterface::class) :
@@ -64,7 +55,12 @@ class ApplicationProvider implements ServiceProviderInterface
 
 				return new Application(
 					consumer: $consumer,
-					router: $container->get(RouterInterface::class),
+					router: $container->has(RouterInterface::class) ?
+						$container->get(RouterInterface::class) :
+						new Router(
+							\config("consumer.handlers") ?? [],
+							\config("consumer.default_handler")
+						),
 					container: $container,
 					signals: \config("consumer.signals") ?? [SIGHUP, SIGINT, SIGTERM],
 					deadletter: $container->has(DeadletterPublisher::class) ?
@@ -220,7 +216,7 @@ class ApplicationProvider implements ServiceProviderInterface
 
 		if( $publisher instanceof PublisherInterface === false ){
 			throw new UnexpectedValueException(
-				\sprintf("Adapter \"%s\" is not a publisher.", $publisher::class)
+				\sprintf("Adapter \"%s\" is not a publisher and cannot be used for deadletter.", $publisher::class)
 			);
 		}
 

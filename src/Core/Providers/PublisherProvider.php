@@ -25,7 +25,9 @@ class PublisherProvider implements ServiceProviderInterface
 				$publisher = ApplicationProvider::resolveAdapter(\config("publisher.adapter"), $container);
 
 				if( $publisher instanceof PublisherInterface === false ){
-					throw new UnexpectedValueException("Unsupported publisher adapter: " . $publisher::class);
+					throw new UnexpectedValueException(
+						\sprintf("Adapter \"%s\" is not a publisher.", $publisher::class)
+					);
 				}
 
 				return $publisher;
