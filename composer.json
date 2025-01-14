@@ -2,6 +2,7 @@
     "name": "nimbly/foundation",
     "type": "library",
     "require": {
+		"php": "^8.2",
         "nimbly/limber": "^3.0",
         "nimbly/capsule": "^3.0",
         "nimbly/carton": "^2.1",
@@ -44,7 +45,10 @@
 	"autoload": {
 		"psr-4": {
 			"Nimbly\\Foundation\\": "src/"
-		}
+		},
+		"files": [
+			"src/Core/functions.php"
+		]
 	},
 	"config": {
 		"platform": {
