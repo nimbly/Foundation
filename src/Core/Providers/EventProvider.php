@@ -15,16 +15,20 @@ use Psr\EventDispatcher\EventDispatcherInterface;
  */
 class EventProvider implements ServiceProviderInterface
 {
+	/**
+	 * @inheritDoc
+	 */
 	public function register(Container $container): void
 	{
 		$container->singleton(
-			EventDispatcherInterface::class,
-			function(Container $container): EventDispatcherInterface {
+			Dispatcher::class,
+			function(Container $container): Dispatcher {
 				return new Dispatcher(
 					\config("event.subscribers") ?? [],
 					$container
 				);
-			}
+			},
+			EventDispatcherInterface::class
 		);
 	}
 }

@@ -6,6 +6,9 @@ use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 
 /**
+ * This Log class is a simple static wrapper around the `Psr\Log\LoggerInterface`
+ * class to be called where ever you need logging.
+ *
  * @method static void debug(string $message, array $context = [])
  * @method static void info(string $message, array $context = [])
  * @method static void notice(string $message, array $context = [])

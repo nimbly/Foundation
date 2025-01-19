@@ -6,7 +6,7 @@ use Nimbly\Carton\Container;
 use Nimbly\Carton\ServiceProviderInterface;
 use GO\Scheduler;
 
-class ScheduleProvider implements ServiceProviderInterface
+class FrameworkProvider implements ServiceProviderInterface
 {
 	/**
 	 * @inheritDoc

@@ -13,6 +13,9 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class CorsMiddleware implements MiddlewareInterface
 {
+	/**
+	 * @param array<string> $allowed_origins
+	 */
 	public function __construct(
 		protected array $allowed_origins
 	)

@@ -15,6 +15,9 @@ use Nimbly\Carton\ServiceProviderInterface;
  */
 class LoggerProvider implements ServiceProviderInterface
 {
+	/**
+	 * @inheritDoc
+	 */
 	public function register(Container $container): void
 	{
 		$container->singleton(

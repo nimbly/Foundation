@@ -6,7 +6,7 @@ use Nimbly\Carton\Container;
 use UnexpectedValueException;
 use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Carton\ServiceProviderInterface;
-use Nimbly\Foundation\Consumer\Providers\ApplicationProvider;
+use Nimbly\Foundation\Consumer\Providers\FrameworkProvider;
 
 /**
  * Provides a `Nimbly\Syndicate\PublisherInterface` instance to publish
@@ -16,13 +16,16 @@ use Nimbly\Foundation\Consumer\Providers\ApplicationProvider;
  */
 class PublisherProvider implements ServiceProviderInterface
 {
+	/**
+	 * @inheritDoc
+	 */
 	public function register(Container $container): void
 	{
 		$container->singleton(
 			PublisherInterface::class,
 			function(Container $container): PublisherInterface {
 
-				$publisher = ApplicationProvider::resolveAdapter(\config("publisher.adapter"), $container);
+				$publisher = FrameworkProvider::resolveAdapter(\config("publisher.adapter"), $container);
 
 				if( $publisher instanceof PublisherInterface === false ){
 					throw new UnexpectedValueException(

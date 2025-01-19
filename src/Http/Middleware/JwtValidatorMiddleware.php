@@ -30,7 +30,7 @@ use Nimbly\Limber\Exceptions\UnauthorizedHttpException;
  * 	- Token is not yet ready (nbf claim)
  * 	- If using multiple keys, the "kid" claim in JWT header does not match a known key
  */
-class ValidateJwtMiddleware implements MiddlewareInterface
+class JwtValidatorMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private Proof $proof,
@@ -94,9 +94,7 @@ class ValidateJwtMiddleware implements MiddlewareInterface
 		$pattern = \sprintf(
 			"/^%s(%s\.%s\.%s)$/i",
 			$scheme ? ($scheme . " ") : "",
-			$b64encoded,
-			$b64encoded,
-			$b64encoded
+			$b64encoded, $b64encoded, $b64encoded
 		);
 
 		if( \preg_match($pattern, $contents, $match) ){

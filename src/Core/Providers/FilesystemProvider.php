@@ -26,6 +26,9 @@ use League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter;
  */
 class FilesystemProvider implements ServiceProviderInterface
 {
+	/**
+	 * @inheritDoc
+	 */
 	public function register(Container $container): void
 	{
 		$container->singleton(

@@ -35,7 +35,12 @@ use MicrosoftAzure\Storage\Queue\QueueRestProxy;
 use Nimbly\Syndicate\PubSub\Redis as RedisPubsub;
 use Nimbly\Syndicate\Router;
 
-class ApplicationProvider implements ServiceProviderInterface
+/**
+ * Provides the Syndicate consumer framework instance.
+ *
+ * @see `config/consumer.php` for configuration options.
+ */
+class FrameworkProvider implements ServiceProviderInterface
 {
 	public function register(Container $container): void
 	{

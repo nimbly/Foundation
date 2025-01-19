@@ -5,6 +5,10 @@ namespace Nimbly\Foundation\Core;
 use Symfony\Contracts\Cache\CacheInterface;
 use UnexpectedValueException;
 
+/**
+ * This Cache class is a simple static wrapper around the Symfony CacheInterface
+ * contract. You can use it globally where ever you need caching support.
+ */
 class Cache
 {
 	private static ?CacheInterface $cache = null;

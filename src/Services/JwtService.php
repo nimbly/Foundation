@@ -2,11 +2,16 @@
 
 namespace Nimbly\Foundation\Services;
 
-use DateInterval;
 use DateTime;
+use DateInterval;
+use Ramsey\Uuid\Uuid;
 use Nimbly\Proof\Proof;
 use Nimbly\Proof\Token;
-use Ramsey\Uuid\Uuid;
+use Nimbly\Proof\ExpiredTokenException;
+use Nimbly\Proof\InvalidTokenException;
+use Nimbly\Proof\TokenEncodingException;
+use Nimbly\Proof\TokenNotReadyException;
+use Nimbly\Proof\SignatureMismatchException;
 
 class JwtService
 {
@@ -25,16 +30,18 @@ class JwtService
 	 * @param string $subject The subject of the JWT (eg, user ID, account ID, etc.)
 	 * @param DateInterval $ttl The TTL of the JWT, used to compute the expiration timestamp.
 	 * @param array<string,mixed> $claims Additional claims to include.
+	 * @throws TokenEncodingException
 	 * @return string The signed JWT string.
 	 */
 	public function createJwt(
 		string $subject,
 		DateInterval $ttl,
-		array $claims = []): string
+		array $claims = [],
+		?string $kid = null): string
 	{
-		return $this->proof->encode(
-			$this->createToken($subject, $ttl, $claims)
-		);
+		$token = $this->createToken($subject, $ttl, $claims);
+
+		return $this->proof->encode($token, $kid);
 	}
 
 	/**
@@ -59,10 +66,23 @@ class JwtService
 		]);
 	}
 
+	public function encodeTokenToJwt(Token $token): string
+	{
+		return $this->proof->encode($token);
+	}
+
 	/**
 	 * Decode a signed JWT into a Token instance.
 	 *
+	 * This will also validate the token, checking the signature,
+	 * expiration date, etc. If the token cannot be validated, an
+	 * exception will be thrown.
+	 *
 	 * @param string $jwt A signed JWT.
+	 * @throws InvalidTokenException
+	 * @throws SignatureMismatchException
+	 * @throws ExpiredTokenException
+	 * @throws TokenNotReadyException
 	 * @return Token
 	 */
 	public function decodeJwtToToken(string $jwt): Token
