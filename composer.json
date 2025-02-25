@@ -9,7 +9,7 @@
         "nimbly/caboodle": "^1.0",
         "nimbly/proof": "^1.1",
         "nimbly/announce": "^2.0",
-		"nimbly/syndicate": "^1.0",
+		"nimbly/syndicate": "^2.0",
         "vlucas/phpdotenv": "^5.6",
         "psy/psysh": "^0.12.7",
         "monolog/monolog": "^3.8",

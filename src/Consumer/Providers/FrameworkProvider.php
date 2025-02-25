@@ -11,29 +11,38 @@ use Nimbly\Carton\Container;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 use PhpMqtt\Client\MqttClient;
-use Nimbly\Syndicate\Queue\RabbitMQ;
-use Nimbly\Syndicate\Queue\Sqs;
-use Nimbly\Syndicate\PubSub\Sns;
-use Nimbly\Syndicate\Queue\Iron;
+use Nimbly\Syndicate\Adapter\RabbitMQ;
+use Nimbly\Syndicate\Adapter\Sqs;
+use Nimbly\Syndicate\Adapter\Sns;
+use Nimbly\Syndicate\Adapter\Iron;
 use Nimbly\Syndicate\Application;
-use Nimbly\Syndicate\PubSub\Mock;
-use Nimbly\Syndicate\PubSub\Mqtt;
-use Nimbly\Syndicate\Queue\Azure;
-use Nimbly\Syndicate\PubSub\Google;
+use Nimbly\Syndicate\Adapter\MockQueue;
+use Nimbly\Syndicate\Adapter\Mqtt;
+use Nimbly\Syndicate\Adapter\Azure;
+use Nimbly\Syndicate\Adapter\Google;
 use PhpAmqpLib\Channel\AMQPChannel;
 use Google\Cloud\PubSub\PubSubClient;
-use Nimbly\Syndicate\Queue\Beanstalk;
-use Nimbly\Syndicate\RouterInterface;
-use Nimbly\Syndicate\ConsumerInterface;
-use Nimbly\Syndicate\PublisherInterface;
+use Nimbly\Syndicate\Adapter\Beanstalk;
+use Nimbly\Syndicate\Router\RouterInterface;
+use Nimbly\Syndicate\Adapter\ConsumerInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
 use PhpMqtt\Client\Contracts\Repository;
-use Nimbly\Syndicate\DeadletterPublisher;
 use Nimbly\Carton\ServiceProviderInterface;
-use Nimbly\Syndicate\Queue\Redis as RedisQueue;
+use Nimbly\Syndicate\Adapter\Redis as RedisQueue;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use MicrosoftAzure\Storage\Queue\QueueRestProxy;
-use Nimbly\Syndicate\PubSub\Redis as RedisPubsub;
-use Nimbly\Syndicate\Router;
+use Nimbly\Syndicate\Adapter\Gearman;
+use Nimbly\Syndicate\Adapter\Mercure;
+use Nimbly\Syndicate\Adapter\NullPublisher;
+use Nimbly\Syndicate\Adapter\Outbox;
+use Nimbly\Syndicate\Adapter\RedisPubsub;
+use Nimbly\Syndicate\Adapter\Segment;
+use Nimbly\Syndicate\Adapter\Webhook;
+use Nimbly\Syndicate\Filter\RedirectFilter;
+use Nimbly\Syndicate\Router\Router;
+use PDO;
+use Psr\Http\Client\ClientInterface;
+use Segment\Client as SegmentClient;
 
 /**
  * Provides the Syndicate consumer framework instance.
@@ -63,14 +72,12 @@ class FrameworkProvider implements ServiceProviderInterface
 					router: $container->has(RouterInterface::class) ?
 						$container->get(RouterInterface::class) :
 						new Router(
-							\config("consumer.handlers") ?? [],
-							\config("consumer.default_handler")
+							handlers: \config("consumer.handlers") ?? [],
+							default: \config("consumer.default_handler")
 						),
 					container: $container,
 					signals: \config("consumer.signals") ?? [SIGHUP, SIGINT, SIGTERM],
-					deadletter: $container->has(DeadletterPublisher::class) ?
-						$container->get(DeadletterPublisher::class) :
-						self::resolveDeadletterPublisher(
+					deadletter: self::resolveDeadletterPublisher(
 							\config("consumer.deadletter.adapter"),
 							\config("consumer.deadletter.topic"),
 							$container
@@ -93,30 +100,43 @@ class FrameworkProvider implements ServiceProviderInterface
 			"azure" => $container->has(Azure::class) ?
 				$container->get(Azure::class) :
 				new Azure(
-					QueueRestProxy::createQueueService(
-						\config("consumer.azure.connection_string")
+					client: QueueRestProxy::createQueueService(
+						\config("consumer.host")
 					)
 				),
 
 			"beanstalkd" => $container->has(Beanstalk::class) ?
 				$container->get(Beanstalk::class) :
 				new Beanstalk(
-					Pheanstalk::create(
+					client: Pheanstalk::create(
 						\config("consumer.host"),
 						\config("consumer.port"),
 					)
 				),
 
+			"gearman" => $container->has(Gearman::class) ?
+				$container->get(Gearman::class) :
+				new Gearman(
+					client: \config("publisher.adapter") === "gearman" ?
+						self::getGearmanInstance(new \GearmanClient, \config("publisher.host"), \config("publisher.gearman.options")) :
+						null,
+					worker: \config("consumer.adapter") === "gearman" ?
+					self::getGearmanInstance(new \GearmanWorker, \config("consumer.host"), \config("consumer.gearman.options")) :
+						null,
+				),
+
 			"google" => $container->has(Google::class) ?
 				$container->get(Google::class) :
 				new Google(
-					new PubSubClient()
+					client: new PubSubClient([
+						"projectId" => \config("consumer.google.project_id"),
+					])
 				),
 
 			"ironmq" => $container->has(Iron::class) ?
 				$container->get(Iron::class) :
 				new Iron(
-					new IronMQ([
+					client: new IronMQ([
 						"token" => \config("consumer.ironmq.token"),
 						"project_id" => \config("consumer.ironmq.project_id"),
 						"protocol" => \config("consumer.ironmq.protocol"),
@@ -127,9 +147,19 @@ class FrameworkProvider implements ServiceProviderInterface
 					])
 				),
 
-			"mock" => $container->has(Mock::class) ?
-				$container->get(Mock::class) :
-				new Mock,
+			"mercure" => $container->has(Mercure::class) ?
+				$container->get(Mercure::class) :
+				new Mercure(
+					hub: \config("publisher.host"),
+					token: \config("publisher.mercure.token"),
+					httpClient: $container->has(ClientInterface::class) ?
+						$container->get(ClientInterface::class) :
+						null
+				),
+
+			"mock" => $container->has(MockQueue::class) ?
+				$container->get(MockQueue::class) :
+				new MockQueue,
 
 			"mqtt" => $container->has(Mqtt::class) ?
 				$container->get(Mqtt::class) :
@@ -146,6 +176,18 @@ class FrameworkProvider implements ServiceProviderInterface
 							$container->get(LoggerInterface::class) :
 							null,
 					)
+				),
+
+			"null" => new NullPublisher(
+				receipt: \config("publisher.null.receipt")
+			),
+
+			"outbox" => $container->has(Outbox::class) ?
+				$container->get(Outbox::class) :
+				new Outbox(
+					pdo: new PDO(\config("publisher.host"), \config("publisher.outbox.username"), \config("publisher.outbox.password")),
+					table: \config("publisher.outbox.table"),
+					identity_generator: \config("publisher.outbox.identity_generator")
 				),
 
 			"rabbitmq" => $container->has(RabbitMQ::class) ?
@@ -175,10 +217,17 @@ class FrameworkProvider implements ServiceProviderInterface
 			"redis_pubsub" => $container->has(RedisPubsub::class) ?
 				$container->get(RedisPubsub::class) :
 				new RedisPubsub(
-					new RedisClient(
+					client: new RedisClient(
 						\config("consumer.host") . ":" . \config("consumer.port") ?? "6379",
 						\config("consumer.redis")
 					)
+				),
+
+			"segment" => $container->has(Segment::class) ?
+				$container->get(Segment::class) :
+				new Segment(
+					client: new SegmentClient("publisher.segment.secret"),
+					autoflush: \config("publisher.segment.auto_flush")
 				),
 
 			"sns" => $container->has(Sns::class) ?
@@ -192,6 +241,15 @@ class FrameworkProvider implements ServiceProviderInterface
 				new Sqs(
 					new SqsClient(\config("consumer.sqs"))
 				),
+
+			"webhook" => new Webhook(
+				httpClient: $container->has(ClientInterface::class) ?
+					$container->get(ClientInterface::class) :
+					null,
+				hostname: \config("publisher.host"),
+				headers: \config("publisher.webhook.headers"),
+				method: \config("publisher.webhook.method")
+			),
 
 			default => throw new UnexpectedValueException("Unknown adapter: " . $adapter),
 		};
@@ -207,7 +265,7 @@ class FrameworkProvider implements ServiceProviderInterface
 	 * @param Container $container
 	 * @return DeadletterPublisher|null
 	 */
-	private static function resolveDeadletterPublisher(?string $adapter, ?string $topic, Container $container): ?DeadletterPublisher
+	private static function resolveDeadletterPublisher(?string $adapter, ?string $topic, Container $container): ?PublisherInterface
 	{
 		if( empty($adapter) ){
 			return null;
@@ -225,7 +283,7 @@ class FrameworkProvider implements ServiceProviderInterface
 			);
 		}
 
-		return new DeadletterPublisher($publisher, $topic);
+		return new RedirectFilter($publisher, $topic);
 	}
 
 	/**
@@ -246,5 +304,31 @@ class FrameworkProvider implements ServiceProviderInterface
 		}
 
 		return $channel;
+	}
+
+	/**
+	 * Get the configured GearmanClient or GearmanWorker instance.
+	 *
+	 * @param GearmanClient|GearmanWorker $instance
+	 * @param string|array<string> $servers
+	 * @param int $options
+	 * @return \GearmanClient|\GearmanWorker
+	 */
+	private static function getGearmanInstance(
+		\GearmanClient|\GearmanWorker $instance,
+		string|array $servers,
+		int $options = 0): \GearmanClient|\GearmanWorker
+	{
+		if( \is_array($servers) ){
+			$servers = \implode(",", $servers);
+		}
+
+		$instance->addServers($servers);
+
+		if( $options ){
+			$instance->addOptions($options);
+		}
+
+		return $instance;
 	}
 }
