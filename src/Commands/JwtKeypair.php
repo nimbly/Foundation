@@ -57,7 +57,8 @@ class JwtKeypair extends Command
 		$environment = \preg_replace(
 			[
 				"/^JWT_PRIVATE_KEY=.*\n?$/m",
-				"/^JWT_PUBLIC_KEY=.*\n?$/m"],
+				"/^JWT_PUBLIC_KEY=.*\n?$/m"
+			],
 			[
 				"JWT_PRIVATE_KEY=" . \trim(\base64_encode($private_key), "=\n"),
 				"JWT_PUBLIC_KEY=" . \trim(\base64_encode($public_key), "=\n") . "\n",

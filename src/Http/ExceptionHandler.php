@@ -56,7 +56,9 @@ class ExceptionHandler implements ExceptionHandlerInterface
 
 		$body = [
 			"code" => (int) $exception->getCode(),
-			"message" => $status_code->value < ResponseStatus::INTERNAL_SERVER_ERROR->value ? $exception->getMessage() : $this->default_message
+			"message" => $status_code->value < ResponseStatus::INTERNAL_SERVER_ERROR->value ?
+				$exception->getMessage() :
+				$this->default_message
 		];
 
 		if( $this->debug ) {

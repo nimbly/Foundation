@@ -10,8 +10,8 @@ use Nimbly\Proof\Signer\KeypairSigner;
 use UnexpectedValueException;
 
 /**
- * Provides the Proof instance necessary to create and/or validate your
- * JWT tokens.
+ * Provides the Proof instance necessary to create and/or validate
+ * your JWT tokens.
  *
  * @see `config/jwt.php` for configuration options.
  */

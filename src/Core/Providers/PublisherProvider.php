@@ -4,8 +4,8 @@ namespace Nimbly\Foundation\Core\Providers;
 
 use Nimbly\Carton\Container;
 use UnexpectedValueException;
-use Nimbly\Syndicate\PublisherInterface;
 use Nimbly\Carton\ServiceProviderInterface;
+use Nimbly\Syndicate\Adapter\PublisherInterface;
 use Nimbly\Foundation\Consumer\Providers\FrameworkProvider;
 
 /**

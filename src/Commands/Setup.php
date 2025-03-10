@@ -27,7 +27,7 @@ class Setup extends Command
 		$http_service = $style->confirm("Will you be running an HTTP service?");
 
 		if( $http_service ){
-			$ENV["HTTP_LISTEN"] = $style->ask("What IP and port number should we listen on?", \config("http.server.listen"));
+			$ENV["HTTP_LISTEN"] = $style->ask("What IP and port number should the HTTP server listen on?", \config("http.server.listen"));
 			$ENV["HTTP_MAX_CONNECTIONS"] = $style->ask("What is the maximum number of concurrent connections?", \config("http.server.max_connections"));
 			$ENV["HTTP_MAX_REQUEST_SIZE"] = $style->ask("What is the maximum request size in bytes?", \config("http.server.max_request_size"));
 			$this->updateEnv($ENV);
@@ -47,7 +47,7 @@ class Setup extends Command
 					$generate_hmac = $style->confirm("Would you like to auto generate an HMAC secret?");
 
 					if( !$generate_hmac ){
-						$hmac = $style->askHidden("Input your HMAC secret (hit ENTER to cancel): ");
+						$hmac = $style->askHidden("Input your HMAC secret: ");
 					}
 
 					$jwt_hmac_command = new ArrayInput([

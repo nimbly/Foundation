@@ -178,9 +178,11 @@ class FrameworkProvider implements ServiceProviderInterface
 					)
 				),
 
-			"null" => new NullPublisher(
-				receipt: \config("publisher.null.receipt")
-			),
+			"null" => $container->has(NullPublisher::class) ?
+				$container->get(NullPublisher::class) :
+				new NullPublisher(
+					receipt: \config("publisher.null.receipt")
+				),
 
 			"outbox" => $container->has(Outbox::class) ?
 				$container->get(Outbox::class) :
@@ -251,7 +253,9 @@ class FrameworkProvider implements ServiceProviderInterface
 				method: \config("publisher.webhook.method")
 			),
 
-			default => throw new UnexpectedValueException("Unknown adapter: " . $adapter),
+			default => throw new UnexpectedValueException(
+				\sprintf("Unknown or unsupported adapter \"%s\".", $adapter)
+			),
 		};
 
 		return $instance;

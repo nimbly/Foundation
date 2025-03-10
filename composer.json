@@ -7,15 +7,13 @@
         "nimbly/capsule": "^3.0",
         "nimbly/carton": "^2.1",
         "nimbly/caboodle": "^1.0",
-        "nimbly/proof": "^1.1",
+        "nimbly/proof": "^2.0",
         "nimbly/announce": "^2.0",
 		"nimbly/syndicate": "^2.0",
         "vlucas/phpdotenv": "^5.6",
         "psy/psysh": "^0.12.7",
         "monolog/monolog": "^3.8",
         "predis/predis": "^2.3",
-		"doctrine/orm": "^3",
-        "doctrine/dbal": "^4",
         "symfony/cache": "^7.2",
         "react/http": "^1.11",
         "league/openapi-psr7-validator": "^0.22.0",
@@ -27,7 +25,8 @@
         "league/flysystem-aws-s3-v3": "^3.0",
 		"league/flysystem-memory": "^3.0",
         "league/flysystem-azure-blob-storage": "^3.0",
-        "league/flysystem-ftp": "^3.0"
+        "league/flysystem-ftp": "^3.0",
+        "illuminate/database": "^12.1"
     },
     "license": "MIT",
     "authors": [

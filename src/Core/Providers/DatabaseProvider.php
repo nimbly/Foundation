@@ -2,10 +2,9 @@
 
 namespace Nimbly\Foundation\Core\Providers;
 
-use Doctrine\ORM\ORMSetup;
 use Nimbly\Carton\Container;
-use Doctrine\ORM\EntityManager;
-use Doctrine\DBAL\DriverManager;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Capsule\Manager;
 use Nimbly\Carton\ServiceProviderInterface;
 
 class DatabaseProvider implements ServiceProviderInterface
@@ -15,22 +14,22 @@ class DatabaseProvider implements ServiceProviderInterface
 	 */
 	public function register(Container $container): void
 	{
-		$container->singleton(
-			EntityManager::class,
-			function(Container $container): EntityManager {
+		$manager = new Manager;
 
-				$config = ORMSetup::createAttributeMetadataConfiguration(
-					paths: ["app/Core/Entities"],
-					isDevMode: \config("app.debug"),
-				);
+		// Add each connection
+		foreach( \config("database.connections") as $name => $options ){
+			$manager->addConnection($options, $name);
+		}
 
-				$connection = DriverManager::getConnection([
-					"driver" => \config("database.adapter"),
-					"path" => \config("database.database"),
-				], $config);
+		// Set the event dispatcher.
+		//$manager->setEventDispatcher(new Dispatcher);
 
-				return new EntityManager($connection, $config);
-			}
-		);
+		//Make this Capsule instance available globally.
+		$manager->setAsGlobal();
+
+		// Setup the Eloquent ORM.
+		$manager->bootEloquent();
+
+		$container->set(DB::class, $manager);
 	}
 }
