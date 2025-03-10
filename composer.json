@@ -21,11 +21,6 @@
         "league/flysystem": "^3.29",
         "league/flysystem-read-only": "^3.28",
         "league/flysystem-path-prefixing": "^3.28",
-        "league/flysystem-sftp-v3": "^3.0",
-        "league/flysystem-aws-s3-v3": "^3.0",
-		"league/flysystem-memory": "^3.0",
-        "league/flysystem-azure-blob-storage": "^3.0",
-        "league/flysystem-ftp": "^3.0",
         "illuminate/database": "^12.1"
     },
     "license": "MIT",
@@ -39,7 +34,7 @@
         "symfony/console": "^7.2",
         "symfony/var-dumper": "^7.2",
         "phpunit/phpunit": "^10.0",
-		"vimeo/psalm": "^5.0",
+		"vimeo/psalm": "^6.0",
         "fakerphp/faker": "^1.24",
         "hackzilla/password-generator": "^1.7"
     },
@@ -50,10 +45,5 @@
 		"files": [
 			"src/Core/functions.php"
 		]
-	},
-	"config": {
-		"platform": {
-			"php": "8.2"
-		}
 	}
 }
