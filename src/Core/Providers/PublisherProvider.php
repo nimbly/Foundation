@@ -7,6 +7,8 @@ use UnexpectedValueException;
 use Nimbly\Carton\ServiceProviderInterface;
 use Nimbly\Syndicate\Adapter\PublisherInterface;
 use Nimbly\Foundation\Consumer\Providers\FrameworkProvider;
+use Nimbly\Syndicate\Filter\ValidatorFilter;
+use Nimbly\Syndicate\Validator\JsonSchemaValidator;
 
 /**
  * Provides a `Nimbly\Syndicate\PublisherInterface` instance to publish
@@ -30,6 +32,18 @@ class PublisherProvider implements ServiceProviderInterface
 				if( $publisher instanceof PublisherInterface === false ){
 					throw new UnexpectedValueException(
 						\sprintf("Adapter \"%s\" is not a publisher.", $publisher::class)
+					);
+				}
+
+				if( \config("publisher.schemas") ){
+					$schemas = \array_map(
+						fn(string $filename) => \file_get_contents($filename),
+						\config("publisher.schemas")
+					);
+
+					$publisher = new ValidatorFilter(
+						new JsonSchemaValidator($schemas),
+						$publisher
 					);
 				}
 
