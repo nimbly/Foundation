@@ -82,6 +82,7 @@ class FrameworkProvider implements ServiceProviderInterface
 							\config("consumer.deadletter.topic"),
 							$container
 						),
+					middleware: \config("consumer.middleware")
 				);
 			}
 		);

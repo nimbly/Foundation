@@ -36,13 +36,11 @@ class PublisherProvider implements ServiceProviderInterface
 				}
 
 				if( \config("publisher.schemas") ){
-					$schemas = \array_map(
-						fn(string $filename) => \file_get_contents($filename),
-						\config("publisher.schemas")
-					);
-
 					$publisher = new ValidatorFilter(
-						new JsonSchemaValidator($schemas),
+						new JsonSchemaValidator(
+							\config("publisher.schemas") ?? [],
+							\config("publisher.ignore_missing_schemas") ?? false
+						),
 						$publisher
 					);
 				}

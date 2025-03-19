@@ -40,23 +40,23 @@ class JsonMiddleware implements MiddlewareInterface
 
 			$content_type = \trim($request->getHeaderLine("Content-Type"));
 
-			if( \stripos($content_type, "application/json") !== false ){
-				$body = (clone $request->getBody())->getContents();
-
-				if( empty($body) ){
-					$parsed_body = [];
-				}
-				else {
-					$parsed_body = \json_decode($body, $this->decode_as_array);
-
-					if( \json_last_error() !== JSON_ERROR_NONE ) {
-						throw new BadRequestHttpException("Invalid JSON request body.");
-					}
-				}
+			if( \stripos($content_type, "application/json") === false ){
+				throw new NotAcceptableHttpException(
+					\sprintf("Content type \"%s\" is not supported.", $content_type)
+				);
 			}
 
+			$body = (clone $request->getBody())->getContents();
+
+			if( empty($body) ){
+				$parsed_body = [];
+			}
 			else {
-				throw new NotAcceptableHttpException("Content type \"" . $content_type . "\" is not supported.");
+				$parsed_body = \json_decode($body, $this->decode_as_array);
+
+				if( \json_last_error() !== JSON_ERROR_NONE ) {
+					throw new BadRequestHttpException("Invalid JSON request body.");
+				}
 			}
 
 			$request = $request->withParsedBody($parsed_body);

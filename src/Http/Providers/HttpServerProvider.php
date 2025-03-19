@@ -21,6 +21,9 @@ use Nimbly\Foundation\Core\Log;
  */
 class HttpServerProvider implements ServiceProviderInterface
 {
+	/**
+	 * @inheritDoc
+	 */
 	public function register(Container $container): void
 	{
 		$container->singleton(

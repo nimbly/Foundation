@@ -17,6 +17,9 @@ use League\OpenAPIValidation\PSR7\ServerRequestValidator;
  */
 class SchemaValidatorProvider implements ServiceProviderInterface
 {
+	/**
+	 * @inheritDoc
+	 */
 	public function register(Container $container): void
 	{
 		$validatorBuilder = new ValidatorBuilder;
