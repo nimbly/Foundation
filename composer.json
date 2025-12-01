@@ -21,7 +21,8 @@
         "league/flysystem": "^3.29",
         "league/flysystem-read-only": "^3.28",
         "league/flysystem-path-prefixing": "^3.28",
-        "illuminate/database": "^12.1"
+        "illuminate/database": "^12.1",
+        "ramsey/uuid": "^4.9"
     },
     "license": "MIT",
     "authors": [
