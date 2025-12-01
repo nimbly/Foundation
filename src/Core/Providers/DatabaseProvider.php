@@ -21,9 +21,6 @@ class DatabaseProvider implements ServiceProviderInterface
 			$manager->addConnection($options, $name);
 		}
 
-		// Set the event dispatcher.
-		//$manager->setEventDispatcher(new Dispatcher);
-
 		//Make this Capsule instance available globally.
 		$manager->setAsGlobal();
 
