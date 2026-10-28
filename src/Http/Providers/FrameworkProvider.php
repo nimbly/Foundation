@@ -3,6 +3,10 @@
 namespace Nimbly\Foundation\Http\Providers;
 
 use Nimbly\Foundation\Http\ExceptionHandler;
+use Nimbly\Limber\Exceptions\ApplicationException;
+use Psr\Http\Server\MiddlewareInterface;
+use Nimbly\Foundation\Core\Attributes\Config;
+use Nimbly\Resolve\Resolve;
 use Nimbly\Carton\Container;
 use Nimbly\Carton\ServiceProviderInterface;
 use Nimbly\Limber\Application;
@@ -16,6 +20,8 @@ use Nimbly\Limber\Router\Router;
  */
 class FrameworkProvider implements ServiceProviderInterface
 {
+	use Resolve;
+
 	/**
 	 * @inheritDoc
 	 */
@@ -33,7 +39,7 @@ class FrameworkProvider implements ServiceProviderInterface
 			function(Container $container): Application {
 				return new Application(
 					router: $container->get(Router::class),
-					middleware: \config("http.middleware") ?? [],
+					middleware: $this->normalizeMiddleware($container, \config("http.middleware") ?? []),
 					container: $container,
 					exceptionHandler: $container->has(ExceptionHandlerInterface::class) ?
 						$container->get(ExceptionHandlerInterface::class) :
@@ -61,5 +67,59 @@ class FrameworkProvider implements ServiceProviderInterface
 		}
 
 		return $router;
+	}
+
+	/**
+	 * Normalize the given middlewares into instances of MiddlewareInterface.
+	 *
+	 * @param Container $container
+	 * @param mixed<string|MiddlewareInterface> $middlewares
+	 * @return array<MiddlewareInterface>
+	 */
+	private function normalizeMiddleware(Container $container, array $middlewares): array
+	{
+		$normalized_middlewares = [];
+
+		foreach( $middlewares as $middleware ){
+
+			if( \is_string($middleware) ){
+				$middleware = $this->make($middleware, $container, $this->resolveConfigAttributes($middleware));
+			}
+
+			if( empty($middleware) || $middleware instanceof MiddlewareInterface === false ){
+				throw new ApplicationException("Provided middleware must be an instance of Psr\Http\Server\MiddlewareInterface or a class-string that references an Psr\Http\Server\MiddlewareInterface implementation.");
+			}
+
+			$normalized_middlewares[] = $middleware;
+		}
+
+		return $normalized_middlewares;
+	}
+
+	/**
+	 * Resolve any config values that should be injected into the class constructor.
+	 *
+	 * @param string $class Class name to resolve config attributes for.
+	 * @return array<string,mixed>
+	 */
+	private function resolveConfigAttributes(string $class): array
+	{
+		$reflection = new \ReflectionClass($class);
+		$constructor = $reflection->getConstructor();
+
+		if( !$constructor ){
+			return [];
+		}
+
+		$configs = [];
+		foreach( $constructor->getParameters() as $parameter ){
+			$attributes = $parameter->getAttributes(Config::class);
+			if( !empty($attributes) ){
+				$config = $attributes[0]->newInstance();
+				$configs[$parameter->getName()] = \config($config->getKey(), $config->getDefault());
+			}
+		}
+
+		return $configs;
 	}
 }

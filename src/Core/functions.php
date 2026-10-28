@@ -8,12 +8,13 @@ if( !\function_exists("config") ){
 	/**
 	 * Get a configuration value.
 	 *
-	 * @param string $key
-	 * @return mixed
+	 * @param string $key The configuration key to retrieve.
+	 * @param mixed $default Default value if configuration key is not set.
+	 * @return mixed The configuration value or the default if not set.
 	 */
-	function config(string $key): mixed
+	function config(string $key, mixed $default = null): mixed
 	{
-		return Container::getInstance()->get(Config::class)->get($key);
+		return Container::getInstance()->get(Config::class)->get($key) ?? $default;
 	}
 }
 
@@ -25,7 +26,7 @@ if( !\function_exists("env") ){
 	 * @param string $key Environment variable name.
 	 * @param mixed $default Default value if envrionment variable not defined or is not set to anything (i.e. an empty string.)
 	 * @param string|null $type The data type of the value. Options: "int", "bool".
-	 * @return mixed
+	 * @return mixed The environment variable value or the default if not set.
 	 */
 	function env(string $key, mixed $default = null, ?string $type = null): mixed
 	{

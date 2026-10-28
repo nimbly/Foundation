@@ -2,7 +2,7 @@
 
 namespace Nimbly\Foundation\Http\Middleware;
 
-use Nimbly\Limber\Router\Route;
+use Nimbly\Limber\Router\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -32,10 +32,12 @@ use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidSecurity;
 class SchemaValidatorMiddleware implements MiddlewareInterface
 {
 	/**
-	 * @param ServerRequestValidator $serverRequestValidator
-	 * @param ResponseValidator $responseValidator
+	 * @param Router $router The router instance used to determine supported methods.
+	 * @param ServerRequestValidator $serverRequestValidator The server request validator instance used to validate incoming requests.
+	 * @param ResponseValidator $responseValidator The response validator instance used to validate outgoing responses.
 	 */
 	public function __construct(
+		protected Router $router,
 		protected ServerRequestValidator $serverRequestValidator,
 		protected ResponseValidator $responseValidator
 	)
@@ -62,8 +64,8 @@ class SchemaValidatorMiddleware implements MiddlewareInterface
 			);
 		}
 		catch( NoOperation $noOperation ){
-			throw new MethodNotAllowedHttpException(
-				methodsAllowed: $request->getAttribute(Route::class)->getMethods(),
+				throw new MethodNotAllowedHttpException(
+				methodsAllowed: $this->router->getSupportedMethods($request),
 				message: $noOperation->getMessage(),
 				previous: $noOperation
 			);
