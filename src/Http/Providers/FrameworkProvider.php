@@ -21,13 +21,18 @@ class FrameworkProvider implements ServiceProviderInterface
 	 */
 	public function register(Container $container): void
 	{
+		if( !$container->has(Router::class) ){
+			$container->set(
+				Router::class,
+				$this->getRouter(\config("http.routes") ?? [])
+			);
+		}
+
 		$container->singleton(
 			Application::class,
 			function(Container $container): Application {
 				return new Application(
-					router: $container->has(Router::class) ?
-						$container->get(Router::class) :
-						$this->getRouter(\config("http.routes") ?? []),
+					router: $container->get(Router::class),
 					middleware: \config("http.middleware") ?? [],
 					container: $container,
 					exceptionHandler: $container->has(ExceptionHandlerInterface::class) ?

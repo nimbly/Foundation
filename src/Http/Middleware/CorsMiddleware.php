@@ -5,6 +5,8 @@ namespace Nimbly\Foundation\Http\Middleware;
 use Nimbly\Capsule\Response;
 use Nimbly\Capsule\HttpMethod;
 use Nimbly\Capsule\ResponseStatus;
+use Nimbly\Limber\Exceptions\InternalServerErrorHttpException;
+use Nimbly\Limber\Router\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -20,13 +22,11 @@ class CorsMiddleware implements MiddlewareInterface
 {
 	/**
 	 * @param array<string> $allowed_origins A list of allowed origins as a hostname. Eg, https://api.example.com
-	 * @param array<string> $allowed_methods A list of HTTP methods allowed to be used. By default, GET, HEAD, and POST are always allowed accoring to CORS safelisted methods.
 	 * @param array<string> $allowed_headers A list of HTTP request headers allowed to be sent. By default, Accept, Accept-Language, Content-Language, Content-Type, and Range are always allowed according to CORS safelisted headers.
-	 * @param bool $allow_credentials Whether credentials are allowed to be passed with requests.
+	 * @param bool $allow_credentials Whether credentials are allowed to be passed with CORS requests.
 	 */
 	public function __construct(
 		protected array $allowed_origins,
-		protected array $allowed_methods = [],
 		protected array $allowed_headers = [],
 		protected bool $allow_credentials = true,
 	)
@@ -38,6 +38,15 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
+		/**
+		 * @var Router|null
+		 */
+		$router = $request->getAttribute(Router::class);
+
+		if( empty($router) ){
+			throw new InternalServerErrorHttpException("Router instance not found.");
+		}
+
 		if( $request->getMethod() !== HttpMethod::OPTIONS->value ){
 			$response = $handler->handle($request);
 		}
@@ -45,7 +54,7 @@ class CorsMiddleware implements MiddlewareInterface
 			$response = new Response(
 				statusCode: ResponseStatus::NO_CONTENT,
 				headers: [
-					"Allow" => \implode(", ", ["OPTIONS", "GET", "HEAD", "POST", ...$this->allowed_methods])
+					"Allow" => \implode(", ", \array_unique(["OPTIONS", ...$router->getSupportedMethods($request)]))
 				]
 			);
 		}
@@ -71,16 +80,16 @@ class CorsMiddleware implements MiddlewareInterface
 
 			$response = $response->withHeader(
 				"Access-Control-Allow-Headers",
-				\implode(", ", [
+				\implode(", ", \array_unique([
 					"Accept", "Accept-Language", "Content-Language", "Content-Type", "Range",
 					...$this->allowed_headers
-				])
+				]))
 			);
 
 			if( $request->getMethod() === HttpMethod::OPTIONS->value ){
 				$response = $response->withHeader(
 					"Access-Control-Allow-Methods",
-					$response->getHeaderLine("Allow")
+					\implode(", ", \array_unique(["OPTIONS", ...$router->getSupportedMethods($request)]))
 				);
 			}
 		}

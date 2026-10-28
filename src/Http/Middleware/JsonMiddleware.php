@@ -2,7 +2,6 @@
 
 namespace Nimbly\Foundation\Http\Middleware;
 
-use Nimbly\Capsule\HttpMethod;
 use Nimbly\Limber\Exceptions\BadRequestHttpException;
 use Nimbly\Limber\Exceptions\NotAcceptableHttpException;
 use Psr\Http\Message\ResponseInterface;
@@ -15,7 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * of Content-Type "application/json". If the content type does not match, a `NotAcceptableHttpException`
  * is thrown (406 Not Acceptable).
  *
- * This middleare will also attempt to decode the JSON body and put its contents into the
+ * This middleware will also attempt to decode the JSON body and put its contents into the
  * `ServerRequest`'s parsed body.
  */
 class JsonMiddleware implements MiddlewareInterface
@@ -34,9 +33,7 @@ class JsonMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		if( \in_array(HttpMethod::tryFrom(\strtoupper($request->getMethod())), [HttpMethod::POST, HttpMethod::PUT, HttpMethod::PATCH]) &&
-			$request->getParsedBody() === null &&
-			$request->getBody()->getSize() ){
+		if( $request->getParsedBody() === null && $request->getBody()->getSize() ){
 
 			$content_type = \trim($request->getHeaderLine("Content-Type"));
 
@@ -49,7 +46,7 @@ class JsonMiddleware implements MiddlewareInterface
 			$body = (clone $request->getBody())->getContents();
 
 			if( empty($body) ){
-				$parsed_body = [];
+				$parsed_body = $this->decode_as_array ? [] : new \stdClass;
 			}
 			else {
 				$parsed_body = \json_decode($body, $this->decode_as_array);
